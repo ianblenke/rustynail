@@ -1,7 +1,7 @@
 #![deny(warnings)]
 
 use std::env;
-use warp::Filter;
+use warp::{http::Uri, Filter};
 
 extern crate pretty_env_logger;
 use crypto::digest::Digest;
@@ -30,7 +30,11 @@ async fn main() {
         .and(warp::path::end())
         .map(|| "This is the rustynail hammer API. Try calling /hammer/{string}");
 
-    let routes = warp::get().and(hammer.or(hammerhelp));
+    let default = warp::any()
+        .and(warp::path::end())
+        .map(|| warp::redirect(Uri::from_static("/hammer")));
+
+    let routes = warp::get().and(hammer.or(hammerhelp).or(default));
 
     warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
 }
