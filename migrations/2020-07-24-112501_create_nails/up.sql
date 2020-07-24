@@ -1,0 +1,4 @@
+CREATE TABLE nails (
+  sha512 VARCHAR PRIMARY KEY,
+  param TEXT NULL
+)

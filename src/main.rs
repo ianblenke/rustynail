@@ -5,7 +5,7 @@ use warp::{http::Uri, Filter};
 
 extern crate pretty_env_logger;
 use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use crypto::sha2::Sha512;
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +19,7 @@ async fn main() {
     let hammer = warp::path("hammer")
         .and(warp::path::param())
         .map(|param: String| {
-            let mut hasher = Sha256::new();
+            let mut hasher = Sha512::new();
             hasher.input_str(&param);
             let hex = hasher.result_str();
             log::info!("{:?} <- {:?}", hex, param);
