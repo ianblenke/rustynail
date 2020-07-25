@@ -1,5 +1,9 @@
 #![deny(warnings)]
 
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+
 use std::env;
 use warp::{http::Uri, Filter};
 
@@ -7,8 +11,14 @@ extern crate pretty_env_logger;
 use crypto::digest::Digest;
 use crypto::sha2::Sha512;
 
+use rustynail::*;
+
+embed_migrations!("migrations");
+
 #[tokio::main]
 async fn main() {
+    //use rustynail::schema::nails::dsl::*;
+
     if env::var_os("RUST_LOG").is_none() {
         // Set `RUST_LOG=debug` to see debug logs,
         // this only shows access logs.
@@ -16,13 +26,17 @@ async fn main() {
     }
     pretty_env_logger::init();
 
+    let connection = establish_connection();
+
+    let _result = embedded_migrations::run_with_output(&connection, &mut std::io::stdout());
+
     let hammer = warp::path("hammer")
         .and(warp::path::param())
-        .map(|param: String| {
+        .map(|p: String| {
             let mut hasher = Sha512::new();
-            hasher.input_str(&param);
+            hasher.input_str(&p);
             let hex = hasher.result_str();
-            log::info!("{:?} <- {:?}", hex, param);
+            log::info!("{:?} <- {:?}", hex, p);
             Ok(format!("{}",hex))
         });
 
