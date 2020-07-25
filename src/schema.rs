@@ -1,6 +1,6 @@
 table! {
     nails (sha512) {
-        sha512 -> Nullable<Text>,
-        param -> Nullable<Text>,
+        sha512 -> Text,
+        param -> Text,
     }
 }
