@@ -35,9 +35,11 @@ async fn main() {
         .map(|p: String| {
             let mut hasher = Sha512::new();
             hasher.input_str(&p);
-            let hex = hasher.result_str();
-            log::info!("{:?} <- {:?}", hex, p);
-            Ok(format!("{}",hex))
+            let sha512 = hasher.result_str();
+            log::info!("{:?} <- {:?}", sha512, p);
+            //// FIXME: Sqlite3 isn't thread safe for multiple writers
+            //let _ = create_nail(&connection, &sha512, &p);
+            Ok(format!("{}",sha512))
         });
 
     let hammerhelp = warp::path("hammer")
