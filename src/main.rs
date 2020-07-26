@@ -1,24 +1,31 @@
 #![deny(warnings)]
 
-extern crate diesel;
+pub mod schema;
+pub mod db_connection;
+pub mod models;
+pub mod handlers;
+
+//#[macro_use]
+//extern crate diesel_migrations;
 #[macro_use]
-extern crate diesel_migrations;
-
-use std::env;
-use warp::{http::Uri, Filter};
-
+extern crate diesel;
+extern crate dotenv;
+extern crate serde;
+extern crate serde_json;
+#[macro_use] 
+extern crate serde_derive;
 extern crate pretty_env_logger;
-use crypto::digest::Digest;
-use crypto::sha2::Sha512;
 
-use rustynail::*;
+extern crate actix;
+extern crate actix_web;
+extern crate futures;
+use std::env;
+use actix_web::{App, HttpServer, web};
+use db_connection::establish_connection;
 
-embed_migrations!("migrations");
+//embed_migrations!("migrations");
 
-#[tokio::main]
-async fn main() {
-    //use rustynail::schema::nails::dsl::*;
-
+fn main() {
     if env::var_os("RUST_LOG").is_none() {
         // Set `RUST_LOG=debug` to see debug logs,
         // this only shows access logs.
@@ -26,30 +33,30 @@ async fn main() {
     }
     pretty_env_logger::init();
 
-    let connection = establish_connection();
+    //let pool = establish_connection();
+    //let connection = pool.get().unwrap();
+    //let _result = embedded_migrations::run_with_output(&connection, &mut std::io::stdout());
 
-    let _result = embedded_migrations::run_with_output(&connection, &mut std::io::stdout());
+    let sys = actix::System::new("rustynail");
 
-    let hammer = warp::path("hammer")
-        .and(warp::path::param())
-        .map(|p: String| {
-            let mut hasher = Sha512::new();
-            hasher.input_str(&p);
-            let sha512 = hasher.result_str();
-            log::info!("{:?} <- {:?}", sha512, p);
-            //let _ = create_nail(&connection, &sha512, &p);
-            Ok(format!("{}",sha512))
-        });
+    HttpServer::new(
+    || App::new()
+        .data(establish_connection())
+        .service(
+            web::resource("/nail")
+                .route(web::get().to_async(handlers::nails::index))
+                .route(web::post().to_async(handlers::nails::create))
+        )
+        .service(
+            web::resource("/nail/{id}")
+                .route(web::get().to_async(handlers::nails::show))
+                .route(web::delete().to_async(handlers::nails::destroy))
+                .route(web::patch().to_async(handlers::nails::update))
+        )
+    )
+    .bind("0.0.0.0:3030").unwrap()
+    .start();
 
-    let hammerhelp = warp::path("hammer")
-        .and(warp::path::end())
-        .map(|| "This is the rustynail hammer API. Try calling /hammer/{string}");
-
-    let default = warp::any()
-        .and(warp::path::end())
-        .map(|| warp::redirect(Uri::from_static("/hammer")));
-
-    let routes = warp::get().and(hammer.or(hammerhelp).or(default));
-
-    warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
+    println!("Started http server: 0.0.0.0:3030");
+    let _ = sys.run();
 }

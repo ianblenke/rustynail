@@ -1,6 +1,7 @@
 table! {
-    nails (sha512) {
-        sha512 -> Text,
-        param -> Text,
+    nails (id) {
+        id -> Int4,
+        sha512 -> Varchar,
+        body -> Text,
     }
 }
