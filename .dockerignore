@@ -1,0 +1,9 @@
+.env
+.git/
+.gitignore
+Makefile
+README.md
+*.sqlite3
+docker-compose.yml
+target/
+postgres/

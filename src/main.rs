@@ -37,7 +37,6 @@ async fn main() {
             hasher.input_str(&p);
             let sha512 = hasher.result_str();
             log::info!("{:?} <- {:?}", sha512, p);
-            //// FIXME: Sqlite3 isn't thread safe for multiple writers
             //let _ = create_nail(&connection, &sha512, &p);
             Ok(format!("{}",sha512))
         });
